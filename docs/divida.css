@@ -1,0 +1,53 @@
+/* Quanto Custa — Dívida Pública (complementa style.css + tema.css) */
+main { padding: 20px; }
+.extenso { margin: 2px 0 6px; font-size: 15px; font-weight: 700; color: #C84C4C; letter-spacing: .01em; }
+.extenso:empty { display: none; }
+.destaque-nota .ritmo { display: inline-block; margin-top: 6px; color: var(--muted); }
+.destaque-nota .ritmo b { color: #C84C4C; }
+td.prev { color: #6b4fa0; }
+td.neg { color: #C84C4C; }
+td.pos { color: var(--ok); }
+.kpi-alerta { border-top: 3px solid #C84C4C; }
+.kpi-alerta .val { color: #C84C4C !important; }
+
+/* barras horizontais em HTML (leves) */
+.barras { list-style: none; margin: 0; padding: 0; }
+.barras li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.barras li:last-child { border-bottom: 0; }
+.b-rot { font-size: 14px; font-weight: 600; color: var(--ink); min-width: 0; }
+.b-rot small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+.b-val { font: 700 14px var(--mono, "IBM Plex Mono", monospace); white-space: nowrap; text-align: right; }
+.b-val small { font-weight: 500; color: var(--muted); font-size: 11px; }
+.b-trilho { grid-column: 1 / -1; height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
+.b-trilho i { display: block; height: 100%; border-radius: 4px; }
+
+/* bancos */
+.aviso-bancos { background: #FBF4E6; border: 1px solid #EFD9AE; color: #5a3d07; border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.5; margin: 0 0 var(--gap); }
+.ctrl { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; }
+.ctrl::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+th.ordena { cursor: pointer; user-select: none; white-space: nowrap; }
+th.ordena.ativo { color: var(--accent); }
+.link-dep { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+.link-dep:hover { text-decoration: underline; }
+#b-tab td.quebra { min-width: 150px; }
+.ranking tfoot td { font-weight: 800; border-top: 2px solid var(--line-2); }
+.d-sec { font-size: 15px; margin: 18px 0 6px; }
+.t-es { color: #6b4fa0; border-color: #cbbde6; background: #f6f2fc; }
+
+/* ficha */
+.veu-ficha { position: fixed; inset: 0; background: rgba(20,40,63,.55); z-index: 70; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; align-items: start; padding: 24px 12px; overflow: auto; }
+.ficha-caixa { position: relative; background: #fff; border-radius: 16px; width: 100%; max-width: 860px; min-width: 0; padding: 24px; }
+.ficha-caixa .fechar { position: absolute; top: 12px; right: 12px; }
+.ficha-cab { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; padding-right: 36px; }
+.ficha-cab h2 { font-size: 24px; margin: 0; }
+.ficha-caixa .kpis { min-width: 0; }
+
+@media (max-width: 760px) { main { padding: 12px; } .ficha-caixa { padding: 16px; } .ficha-cab h2 { font-size: 20px; } }
+@media (max-width: 600px) {
+  #b-tab td, #e-tab td { padding-left: 5px; padding-right: 5px; }
+  #b-tab td.quebra { min-width: 120px; }
+  .b-rot { font-size: 13px; }
+}
+.ranking td .seg { display: block; font-size: 11.5px; }
+@media (min-width: 1000px) { #i-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+#i-total, #dv-total { font-size: clamp(24px, 6.4vw, 76px); white-space: nowrap; }
