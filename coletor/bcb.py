@@ -171,8 +171,22 @@ def ifdata_cadastro(anomes: str) -> list[dict]:
     return _odata(f"IfDataCadastro(AnoMes=@AnoMes)?@AnoMes={anomes}&$top=100000&$format=json")
 
 
-def montar_bancos(cadastro: list[dict], valores: dict[str, list[dict]]) -> list[dict]:
-    """Junta o cadastro (nome, segmento, controle) com as colunas escolhidas de cada relatório."""
+def semestres(periodo: str, n=2) -> list[str]:
+    """Os `n` últimos fins de semestre (junho/dezembro) até `periodo` (AAAAMM)."""
+    a, m = int(periodo[:4]), int(periodo[4:])
+    m = 6 if m >= 6 and m < 12 else (12 if m == 12 else 12)
+    if int(periodo[4:]) < 6:
+        a -= 1
+    out = []
+    while len(out) < n:
+        out.append(f"{a}{m:02d}")
+        a, m = (a, 6) if m == 12 else (a - 1, 12)
+    return out
+
+
+def montar_bancos(cadastro: list[dict], valores: dict[str, list[dict]], resultados: list[list[dict]] | None = None) -> list[dict]:
+    """Junta o cadastro (nome, segmento, controle) com as colunas escolhidas de cada relatório.
+    `resultados`: listas do relatório 4 (resultado) de cada semestre a somar (12 meses = 2 semestres)."""
     por_cod = {c["CodInst"]: c for c in cadastro}
     # conglomerado: usa o nome da instituição líder (CNPJ líder) ou do primeiro membro
     for c in cadastro:
@@ -187,12 +201,16 @@ def montar_bancos(cadastro: list[dict], valores: dict[str, list[dict]]) -> list[
     bancos: dict[str, dict] = {}
     for chave, (rel, padrao) in COLUNAS.items():
         rx = re.compile(padrao)
-        for v in valores.get(rel, []):
-            if not rx.search(_limpa(v.get("NomeColuna"))):
-                continue
-            o = bancos.setdefault(v["CodInst"], {"cod": v["CodInst"]})
-            if chave not in o and v.get("Saldo") is not None:
-                o[chave] = round(float(v["Saldo"]) / 1000, 3)   # IF.data vem em R$ mil -> R$ milhões
+        # resultado (relatório 4): soma os semestres pedidos (o IF.data acumula jan–jun e jul–dez)
+        listas = resultados if (rel == "4" and resultados is not None) else [valores.get(rel, [])]
+        for lista in listas:
+            vistos = set()
+            for v in lista:
+                if v["CodInst"] in vistos or v.get("Saldo") is None or not rx.search(_limpa(v.get("NomeColuna"))):
+                    continue
+                vistos.add(v["CodInst"])   # o IF.data às vezes repete a mesma linha
+                o = bancos.setdefault(v["CodInst"], {"cod": v["CodInst"]})
+                o[chave] = round((o.get(chave) or 0) + float(v["Saldo"]) / 1_000_000, 1)   # reais -> R$ milhões
     CONTROLE = {1: "Público", 2: "Privado nacional", 3: "Estrangeiro"}
     out = []
     for cod, o in bancos.items():

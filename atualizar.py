@@ -99,16 +99,23 @@ def coletar_bancos(hoje: date) -> dict:
     erros = []
     for anomes in bcb.ifdata_periodos(hoje):
         try:
-            valores = {rel: bcb.ifdata_valores(anomes, rel) for rel in ("1", "2", "4")}
+            valores = {rel: bcb.ifdata_valores(anomes, rel) for rel in ("1", "2")}
             if not valores["2"]:
                 erros.append(f"{anomes}: sem dados")
                 continue
             cad = bcb.ifdata_cadastro(anomes)
-            bancos = [b for b in bcb.montar_bancos(cad, valores) if (b.get("ativo") or 0) > 0]
-            print(f"  IF.data {anomes}: {len(bancos)} instituições")
-            # período anterior (mesmo trimestre do ano anterior) para comparar a renda com títulos
-            return {"periodo": anomes, "tipo": "conglomerados prudenciais e instituições independentes",
-                    "unidade": "R$ milhões", "bancos": bancos, "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+            # resultado de 12 meses: os dois últimos semestres fechados (o IF.data acumula jan–jun e jul–dez)
+            sems = bcb.semestres(anomes)
+            resultados = [bcb.ifdata_valores(sm, "4") for sm in sems]
+            if not all(resultados):
+                raise RuntimeError(f"resultado semestral incompleto: {sems}")
+            bancos = [b for b in bcb.montar_bancos(cad, valores, resultados) if (b.get("ativo") or 0) > 0]
+            print(f"  IF.data {anomes}: {len(bancos)} instituições; resultado de {sems}")
+            campos = ["cod", "nome", "segmento", "controle", "porte", "uf", "ativo", "tvm", "liquidez", "credito",
+                      "renda_tvm", "renda_liquidez", "renda_credito", "lucro", "pl"]
+            return {"periodo": anomes, "semestres": sems, "tipo": "conglomerados prudenciais e instituições independentes",
+                    "unidade": "R$ milhões", "campos": campos, "linhas": [[b.get(c) for c in campos] for b in bancos],
+                    "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds")}
         except Exception as e:  # noqa: BLE001
             erros.append(f"{anomes}: {e}")
     raise RuntimeError("; ".join(erros))

@@ -47,15 +47,15 @@ def test_montar_bancos_junta_cadastro_e_colunas():
     cad = [{"CodInst": "111", "NomeInstituicao": "BANCO A S.A.", "SegmentoTb": "Banco Múltiplo", "Tc": 2, "Sr": "S1",
             "CodConglomeradoPrudencial": "C1", "CnpjInstituicaoLider": "111"},
            {"CodInst": "222", "NomeInstituicao": "BANCO B", "SegmentoTb": "Banco Comercial", "Tc": 1, "Sr": "S3"}]
-    val = {"2": [{"CodInst": "C1", "NomeColuna": "Títulos e Valores Mobiliários \n(c)", "Saldo": 5_000_000},
-                 {"CodInst": "C1", "NomeColuna": "Ativo Total \n(k) = (a) + (b)", "Saldo": 9_000_000},
-                 {"CodInst": "222", "NomeColuna": "Títulos e Valores Mobiliários \n(c)", "Saldo": 7_000_000}],
-           "4": [{"CodInst": "C1", "NomeColuna": "Rendas de Títulos e Valores Mobiliários  (b)", "Saldo": 300_000}]}
+    val = {"2": [{"CodInst": "C1", "NomeColuna": "Títulos e Valores Mobiliários \n(c)", "Saldo": 5_000_000_000},
+                 {"CodInst": "C1", "NomeColuna": "Ativo Total \n(k) = (a) + (b)", "Saldo": 9_000_000_000},
+                 {"CodInst": "222", "NomeColuna": "Títulos e Valores Mobiliários \n(c)", "Saldo": 7_000_000_000}],
+           "4": [{"CodInst": "C1", "NomeColuna": "Rendas de Títulos e Valores Mobiliários  (b)", "Saldo": 300_000_000}]}
     b = bcb.montar_bancos(cad, val)
     assert [x["cod"] for x in b] == ["222", "C1"]          # ordem: maior carteira de títulos
     c1 = b[1]
     assert c1["nome"] == "BANCO A S.A." and c1["controle"] == "Privado nacional" and c1["segmento"] == "Banco Múltiplo"
-    assert c1["tvm"] == 5000 and c1["ativo"] == 9000 and c1["renda_tvm"] == 300   # R$ mil -> R$ milhões
+    assert c1["tvm"] == 5000 and c1["ativo"] == 9000 and c1["renda_tvm"] == 300   # reais -> R$ milhões
     assert b[0]["controle"] == "Público"
 
 
@@ -63,3 +63,15 @@ def test_periodos_ifdata():
     from datetime import date
     assert bcb.ifdata_periodos(date(2026, 11, 24), 3) == ["202609", "202606", "202603"]
     assert bcb.ifdata_periodos(date(2026, 2, 1), 2) == ["202512", "202509"]
+
+
+def test_semestres_e_soma_do_resultado():
+    assert bcb.semestres("202609") == ["202606", "202512"]
+    assert bcb.semestres("202606") == ["202606", "202512"]
+    assert bcb.semestres("202603") == ["202512", "202506"]
+    assert bcb.semestres("202512") == ["202512", "202506"]
+    r1 = [{"CodInst": "X", "NomeColuna": "Rendas de Títulos e Valores Mobiliários (b)", "Saldo": 2_000_000},
+          {"CodInst": "X", "NomeColuna": "Rendas de Títulos e Valores Mobiliários (b)", "Saldo": 2_000_000}]  # repetida
+    r2 = [{"CodInst": "X", "NomeColuna": "Rendas de Títulos e Valores Mobiliários (b)", "Saldo": 3_000_000}]
+    b = bcb.montar_bancos([], {"2": [{"CodInst": "X", "NomeColuna": "Ativo Total (k) = ...", "Saldo": 1}]}, [r1, r2])
+    assert b[0]["renda_tvm"] == 5.0
