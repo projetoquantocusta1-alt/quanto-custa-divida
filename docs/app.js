@@ -374,10 +374,11 @@ function rDava() {
   const v = D.juros_12m * MI, n = (x) => (x >= 1e6 ? nf(x / 1e6, 1) + " mi" : x >= 10 ? nf(Math.floor(x)) : nf(x, 1));
   $("#dv-sub").textContent = `Juros da dívida pública nos 12 meses até ${rotMes(D.referencia)}:`;
   $("#dv-total").textContent = brl(v); $("#dv-ext").textContent = porExtenso(v);
-  $("#dv-regra").textContent = `Setor público consolidado · ${pct(D.juros_pib12, 2)} do PIB · ${brl(v / E.d.populacao.valor)} por brasileiro · com esse dinheiro, daria para:`;
+  $("#dv-regra").textContent = `Setor público consolidado · ${pct(D.juros_pib12, 2)} do PIB · com esse dinheiro, daria para:`;
   $("#dv-cards").innerHTML = R.itens.map((it) => { const q = v / (it.construcao + it.ano_funcionando), so = v / it.construcao;
     return `<div class="dv-card"><b class="dv-num">${n(q)}</b><span class="dv-rot">${esc(it.nome)}</span><p>${it.feminino ? "construídas" : "construídos"} do zero e funcionando por 1 ano <span class="sub">(${esc(it.detalhe)})</span></p><p class="sub">Só construir e equipar: ${n(so)} ${esc(so >= 2 ? it.plural : it.unidade)}.</p></div>`; }).join("") +
-    `<div class="dv-card"><b class="dv-num">${n(v / R.bolsa_familia.por_familia_ano)}</b><span class="dv-rot">de famílias no Bolsa Família</span><p>durante 1 ano <span class="sub">(${esc(R.bolsa_familia.detalhe)})</span></p></div>`;
+    `<div class="dv-card"><b class="dv-num">${n(v / R.bolsa_familia.por_familia_ano)}</b><span class="dv-rot">de famílias no Bolsa Família</span><p>durante 1 ano <span class="sub">(${esc(R.bolsa_familia.detalhe)})</span></p></div>` +
+    `<div class="dv-card"><b class="dv-num">${brl(v / E.d.populacao.valor)}</b><span class="dv-rot">para cada brasileiro</span><p>se os juros de 12 meses fossem divididos igualmente <span class="sub">(${nf(E.d.populacao.valor)} habitantes, IBGE)</span></p></div>`;
   const lnk = ([t, u]) => (u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>` : esc(t));
   $("#dv-fontes").innerHTML = `<ul>${R.itens.map((it) => `<li><b>${esc(it.nome)}</b>: ${brl(it.construcao + it.ano_funcionando)} cada<ul>${it.fontes.map((f) => `<li>${lnk(f)}</li>`).join("")}</ul></li>`).join("")}<li><b>Bolsa Família</b>: ${brl(R.bolsa_familia.por_familia_ano)} por família no ano — ${lnk(R.bolsa_familia.fonte)}</li></ul>
     <p class="sub">Comparação ilustrativa: os juros são uma obrigação do governo com quem emprestou dinheiro; deixar de pagá-los teria outras consequências.</p>`;
