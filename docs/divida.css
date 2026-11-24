@@ -49,5 +49,6 @@ th.ordena.ativo { color: var(--accent); }
   .b-rot { font-size: 13px; }
 }
 .ranking td .seg { display: block; font-size: 11.5px; }
-@media (min-width: 1000px) { #i-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
 #i-total, #dv-total { font-size: clamp(24px, 6.4vw, 76px); white-space: nowrap; }
+.contador-linha .extenso { display: block; font-size: 12px; margin: 2px 0 0; }

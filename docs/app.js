@@ -86,10 +86,11 @@ function contador() {
     $("#i-total").textContent = brl(v); $("#i-ext").textContent = porExtenso(v);
     if (E.pag === "inicio") E.tick = requestAnimationFrame(passo); };
   passo();
-  $("#i-rot").textContent = "Dívida bruta do governo, agora (estimativa em tempo real)";
-  $("#i-nota").innerHTML = `Último número oficial do Banco Central: <b>${brl(base)}</b> em ${rotMes(ref)} — União, INSS, estados e municípios.<br>
-    <span class="ritmo">Desde então, o valor avança no ritmo médio dos últimos 12 meses: <b>+${brl(porSeg, 2)} por segundo</b> · ${curto(porSeg * 86400)} por dia (estimativa)</span><br>
-    <span class="ritmo">Só de juros, a dívida custa <b>${brl(jurosSeg, 0)} por segundo</b> · ${curto(jurosSeg * 86400)} por dia</span>`;
+  $("#i-rot").textContent = "A dívida bruta do governo está, agora, em";
+  $("#i-nota").innerHTML = `União, INSS, estados e municípios · último número oficial do Banco Central: <b>${curto(base)}</b> em ${rotMes(ref)}`;
+  $("#i-j12").textContent = curto(R.juros_12m * MI); $("#i-j12-ext").textContent = `${pct(R.juros_pib12, 2)} do PIB`;
+  $("#i-jseg").textContent = brl(jurosSeg, 0); $("#i-jdia").textContent = curto(jurosSeg * 86400); $("#i-cdia").textContent = curto(porSeg * 86400);
+  $("#i-imp-nota").textContent = "O valor da dívida avança em tempo real a partir do último número oficial, no ritmo médio de aumento dos últimos 12 meses (estimativa). O Banco Central publica a dívida com cerca de um mês e meio de atraso.";
 }
 function rInicio() {
   const D = E.d, R = D.resumo, pop = D.populacao?.valor, F = D.focus?.itens || [];
@@ -99,12 +100,9 @@ function rInicio() {
   kpis("#i-kpis", [
     ["Dívida bruta / PIB", pct(R.dbgg_pib, 2), `em ${rotMes(R.referencia)} · ${fAno ? `mercado espera ${pct(fAno.mediana, 1)} em dez` : "Banco Central"}`],
     ["Por brasileiro", brl((R.dbgg * MI) / pop), `${nf(pop)} habitantes (IBGE)`],
-    ["Juros em 12 meses", curto(R.juros_12m * MI), `${pct(R.juros_pib12, 2)} do PIB · ${brl((R.juros_12m * MI) / pop)} por brasileiro`, "kpi-alerta"],
-    ["Juros no ano", curto(R.juros_ano * MI), `jan a ${MESES[+R.referencia.slice(5, 7) - 1]}/${R.referencia.slice(0, 4)}`],
     ["Dívida líquida", curto(R.dlsp * MI), `${pct(R.dlsp_pib, 1)} do PIB · descontado o que o governo tem a receber`],
-    [prim > 0 ? "Déficit primário (12 meses)" : "Superávit primário (12 meses)", curto(Math.abs(prim) * MI), `${pct(Math.abs(R.primario_pib12), 2)} do PIB · contas sem os juros`],
-    ["Selic (meta)", sel ? pct(sel.valor, 2) : "—", "ao ano · corrige mais da metade da dívida em títulos"],
-    ["Prazo médio dos títulos", nf(R.prazo_medio, 1) + " meses", `≈ ${nf(R.prazo_medio / 12, 1)} anos para vencer, em média`]]);
+    ["Selic (meta)", sel ? pct(sel.valor, 2) : "—", "ao ano · corrige mais da metade da dívida em títulos"]]);
+
   // gráfico: % do PIB + projeção
   const J = janela(), P = D.projecao.meses.filter((x) => x.mes.slice(0, 4) <= String(+R.referencia.slice(0, 4) + 1));
   const lab = [...J, ...P.map((x) => x.mes)];
@@ -373,14 +371,13 @@ function fichaBanco(cod) {
 // ---------------------------------------------------------------- o que dava pra fazer
 function rDava() {
   const R = window.REFERENCIAS, D = E.d.resumo; if (!R) return;
-  const v = D.juros_12m * MI, n = (x) => (x >= 10 ? nf(Math.floor(x)) : nf(x, 1));
+  const v = D.juros_12m * MI, n = (x) => (x >= 1e6 ? nf(x / 1e6, 1) + " mi" : x >= 10 ? nf(Math.floor(x)) : nf(x, 1));
   $("#dv-sub").textContent = `Juros da dívida pública nos 12 meses até ${rotMes(D.referencia)}:`;
   $("#dv-total").textContent = brl(v); $("#dv-ext").textContent = porExtenso(v);
-  $("#dv-regra").textContent = `Setor público consolidado · ${pct(D.juros_pib12, 2)} do PIB · com esse dinheiro, daria para:`;
+  $("#dv-regra").textContent = `Setor público consolidado · ${pct(D.juros_pib12, 2)} do PIB · ${brl(v / E.d.populacao.valor)} por brasileiro · com esse dinheiro, daria para:`;
   $("#dv-cards").innerHTML = R.itens.map((it) => { const q = v / (it.construcao + it.ano_funcionando), so = v / it.construcao;
     return `<div class="dv-card"><b class="dv-num">${n(q)}</b><span class="dv-rot">${esc(it.nome)}</span><p>${it.feminino ? "construídas" : "construídos"} do zero e funcionando por 1 ano <span class="sub">(${esc(it.detalhe)})</span></p><p class="sub">Só construir e equipar: ${n(so)} ${esc(so >= 2 ? it.plural : it.unidade)}.</p></div>`; }).join("") +
-    `<div class="dv-card"><b class="dv-num">${nf(Math.floor(v / R.bolsa_familia.por_familia_ano))}</b><span class="dv-rot">famílias no Bolsa Família</span><p>durante 1 ano <span class="sub">(${esc(R.bolsa_familia.detalhe)})</span></p></div>` +
-    `<div class="dv-card"><b class="dv-num">${brl(v / E.d.populacao.valor)}</b><span class="dv-rot">para cada brasileiro</span><p>se os juros de 12 meses fossem divididos igualmente</p></div>`;
+    `<div class="dv-card"><b class="dv-num">${n(v / R.bolsa_familia.por_familia_ano)}</b><span class="dv-rot">de famílias no Bolsa Família</span><p>durante 1 ano <span class="sub">(${esc(R.bolsa_familia.detalhe)})</span></p></div>`;
   const lnk = ([t, u]) => (u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>` : esc(t));
   $("#dv-fontes").innerHTML = `<ul>${R.itens.map((it) => `<li><b>${esc(it.nome)}</b>: ${brl(it.construcao + it.ano_funcionando)} cada<ul>${it.fontes.map((f) => `<li>${lnk(f)}</li>`).join("")}</ul></li>`).join("")}<li><b>Bolsa Família</b>: ${brl(R.bolsa_familia.por_familia_ano)} por família no ano — ${lnk(R.bolsa_familia.fonte)}</li></ul>
     <p class="sub">Comparação ilustrativa: os juros são uma obrigação do governo com quem emprestou dinheiro; deixar de pagá-los teria outras consequências.</p>`;
@@ -411,7 +408,7 @@ async function iniciar() {
   catch { $("#aviso").hidden = false; $("#aviso").textContent = "Os dados ainda estão sendo coletados pelo robô. Volte em alguns minutos."; irPara("metodo"); return; }
   montarIPCA();
   $("#ipca-ref").textContent = `IPCA até ${rotMes(IPCA.ult)}`;
-  $("#atualizado").textContent = `Atualizado em ${new Date(E.d.gerado_em).toLocaleString("pt-BR")} · dados até ${rotMes(E.d.resumo.referencia)}`;
+  $("#atualizado").textContent = `Dados atualizados em ${new Date(E.d.gerado_em).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`;
   const falhas = Object.entries(E.meta?.situacao || {}).filter(([k, v]) => k !== "populacao" && v !== "ok");
   if (falhas.length) { $("#aviso").hidden = false; $("#aviso").textContent = `Na última coleta, não responderam: ${falhas.map(([k]) => ({ series: "séries do Banco Central", cronograma: "cronograma de vencimentos", focus: "Focus", bancos: "IF.data" }[k] || k)).join(", ")}. Mostramos os dados da coleta anterior.`; }
   const h = location.hash.slice(1), mb = h.match(/^banco-(.+)$/);
