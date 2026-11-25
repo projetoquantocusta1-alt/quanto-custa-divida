@@ -45,6 +45,9 @@ def montar_divida(s: dict, extras: dict) -> dict:
     ref = max(s["dbgg"])                       # último mês com a dívida bruta publicada
     col = lambda k: [s[k].get(m) for m in meses]  # noqa: E731
     mensal = {"meses": meses, **{k: col(k) for k in config.SERIES}}
+    # IPCA dos meses depois do último dado da dívida: a correção pela inflação vai até o último IPCA
+    # divulgado (o mesmo mês de referência dos outros sites), não só até o mês da dívida
+    mensal["ipca_extra"] = {m: v for m, v in sorted(s["ipca"].items()) if m > meses[-1] and v is not None}
     # números do mês de referência
     j12 = calculos.soma_12(s["juros"], ref)
     p12 = calculos.soma_12(s["primario"], ref)

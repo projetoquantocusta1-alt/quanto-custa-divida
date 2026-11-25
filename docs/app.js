@@ -43,7 +43,8 @@ let IPCA = null;   // número-índice mensal
 function montarIPCA() {
   const m = M(), idx = {}; let n = 100;
   m.meses.forEach((mes, i) => { if (m.ipca[i] != null) n *= 1 + m.ipca[i] / 100; idx[mes] = n; });
-  const ult = [...m.meses].reverse().find((mes, k) => m.ipca[m.meses.length - 1 - k] != null);
+  let ult = [...m.meses].reverse().find((mes, k) => m.ipca[m.meses.length - 1 - k] != null);
+  for (const [mes, v] of Object.entries(m.ipca_extra || {}).sort()) { n = idx[ult] * (1 + v / 100); ult = mes; idx[mes] = n; }
   IPCA = { idx, ult, ref: idx[ult] };
 }
 // fator para trazer o valor de um mês para preços de hoje (1 se "Valores de hoje" estiver desligado)
